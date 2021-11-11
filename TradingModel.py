@@ -10,6 +10,7 @@ from openpyxl import load_workbook
 
 ToExcel = True
 DoNotRequest = False
+FromGoodInfo = False
 
 headers = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0 Win64 x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36"}
@@ -26,21 +27,46 @@ def calculate_each_cost(each_cost_data):
 
 # 下載當日收盤價
 def download_today_close(each_today_close):
-    url = 'https://goodinfo.tw/StockInfo/StockDetail.asp?STOCK_ID={}'.format(
-        each_today_close['Stock_Id'])
-    response = requests.get(url, headers=headers)
-    response.encoding = 'utf8'
-    soup = BeautifulSoup(response.text, 'lxml')
-    table = soup.find('table', class_='b1 p4_2 r10')
-    try:
-        tr = table.find('tr', attrs={'align': 'center'})
-        td = tr.find('td')
-        print('Stock_Id:', each_today_close['Stock_Id'], '下載收盤價')
-        time.sleep(15)
-        return(td.string)
-    except:
-        print('瀏覽量異常 from goodinfo')
-        return(0)
+    if FromGoodInfo:
+        url = 'https://goodinfo.tw/StockInfo/StockDetail.asp?STOCK_ID={}'.format(
+            each_today_close['Stock_Id'])
+        response = requests.get(url, headers=headers)
+        response.encoding = 'utf8'
+        soup = BeautifulSoup(response.text, 'lxml')
+        table = soup.find('table', class_='b1 p4_2 r10')
+        try:
+            tr = table.find('tr', attrs={'align': 'center'})
+            td = tr.find('td')
+            print('Stock_Id:',
+                  each_today_close['Stock_Id'], '下載收盤價 : ', td.string)
+            time.sleep(15)
+            return(td.string)
+        except:
+            print('瀏覽量異常 from goodinfo')
+            return(0)
+    else:
+        url = 'https://www.twse.com.tw/exchangeReport/STOCK_DAY?stockNo={}&response=html'.format(
+            str(each_today_close['Stock_Id'])[:4])
+        try:
+            temp = pd.read_html(url)
+            temp = temp[0]
+            temp.to_excel('TEMP_TWSE.xlsx')
+            temp = pd.read_excel('TEMP_TWSE.xlsx')
+            print('Stock_Id:',
+                  str(each_today_close['Stock_Id'])[:4], '下載收盤價 : ', temp['Unnamed: 7'].to_list()[-1])
+            time.sleep(15)
+            return(temp['Unnamed: 7'].to_list()[-1])
+        except:
+            url = 'https://www.tpex.org.tw/web/stock/aftertrading/daily_trading_info/st43_print.php?l=zh-tw&stkno={}&s=0,asc,0'.format(
+                str(each_today_close['Stock_Id'])[:4])
+            temp = pd.read_html(url)
+            temp = temp[0]
+            temp.to_excel('TEMP_TWSE.xlsx')
+            temp = pd.read_excel('TEMP_TWSE.xlsx')
+            print('Stock_Id:',
+                  str(each_today_close['Stock_Id'])[:4], '下載收盤價 : ', temp['Unnamed: 7'].to_list()[-2])
+            time.sleep(15)
+            return(temp['Unnamed: 7'].to_list()[-2])
 
 
 # 計笡庫存個別資產
