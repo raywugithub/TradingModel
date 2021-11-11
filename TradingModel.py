@@ -25,6 +25,10 @@ def calculate_each_cost(each_cost_data):
     return each_cost_data['Position'] * each_cost_data['Price']
 
 
+def calculate_each_profit(each_profit):
+    return each_profit['EachCost'] * (-1)
+
+
 # 下載當日收盤價
 def download_today_close(each_today_close):
     if FromGoodInfo:
@@ -97,8 +101,20 @@ df_trading_history = pd.read_excel(
 # 計算每次交易記錄當下支出成本
 df_trading_history['EachCost'] = df_trading_history.apply(
     calculate_each_cost, axis=1)
+df_trading_history['EachCalculateProfit'] = df_trading_history.apply(
+    calculate_each_profit, axis=1)
 if ToExcel:
     df_trading_history.to_excel('TEMP_TradingModel_TradingHistory.xlsx')
+
+
+# 計算/輸出當日平倉表單
+# 損益
+today_close_position = df_trading_history[df_trading_history['Date'] == str(
+    today)]
+today_close_position = today_close_position[today_close_position['Action'] == 'short']
+if ToExcel:
+    today_close_position.to_excel(
+        'TEMP_TradingModel_TodayClosePosition.xlsx', sheet_name='今日平倉', index=False)
 
 
 # 計算/輸出目前總庫存表單
