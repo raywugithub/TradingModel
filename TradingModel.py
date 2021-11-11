@@ -95,7 +95,7 @@ def check_each_open_opsition_lost_previous_platform(each_open_position):
 
 
 df_trading_history = pd.read_excel(
-    'TEST_TradingModel_TradingHistory.xlsx', sheet_name='交易記錄')
+    'TradingModel_TradingHistory.xlsx', sheet_name='交易記錄')
 
 
 # 計算每次交易記錄當下支出成本
@@ -126,7 +126,7 @@ total_open_postion.reset_index(inplace=True)
 total_open_postion = total_open_postion[total_open_postion['Position'] != 0]
 if ToExcel:
     total_open_postion.to_excel(
-        'TEST_TradingModel_TotalOpenPosition.xlsx', sheet_name='庫存')
+        'TradingModel_TotalOpenPosition.xlsx', sheet_name='庫存')
 
 
 if not DoNotRequest:
@@ -137,26 +137,26 @@ if not DoNotRequest:
         download_today_close, axis=1)
     if ToExcel:
         open_position_today_close.to_excel(
-            'TEST_TradingModel_OpenPositionTodayClose.xlsx', sheet_name='收盤價')
+            'TradingModel_OpenPositionTodayClose.xlsx', sheet_name='收盤價')
 else:
     open_position_today_close = pd.read_excel(
-        'TEST_TradingModel_OpenPositionTodayClose.xlsx')
+        'TradingModel_OpenPositionTodayClose.xlsx')
 
 
 # 輸出每日總資產
-# 'TEST_TradingModel_TotalCapital.xlsx'
+# 'TradingModel_TotalCapital.xlsx'
 total_open_position_capital = pd.merge(
     total_open_postion, open_position_today_close)
 total_open_position_capital['EachCapital'] = total_open_position_capital.apply(
     calculate_each_capital, axis=1)
 
-total_capital = pd.read_excel('TEST_TradingModel_TotalCapital.xlsx')
+total_capital = pd.read_excel('TradingModel_TotalCapital.xlsx')
 if total_capital['Date'].to_list()[-1].date() != today:
     total_capital = total_capital.append(
         {'Date': today, 'TotalCapital': total_open_position_capital['EachCapital'].sum()}, ignore_index=True)
     if ToExcel:
         total_capital.to_excel(
-            'TEST_TradingModel_TotalCapital.xlsx', index=False)
+            'TradingModel_TotalCapital.xlsx', index=False)
 
 
 # 檢查目前庫存的收盤價是否進入平台
