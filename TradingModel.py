@@ -9,8 +9,9 @@ import time
 from openpyxl import load_workbook
 
 ToExcel = True
-DoNotRequest = False
+DoNotRequest = True
 FromGoodInfo = False
+Check = False
 
 headers = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0 Win64 x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36"}
@@ -22,11 +23,7 @@ today = date.today()
 # `TradingHistory.xlsx` 交易記錄
 # 每次交易成本 = Position * Price
 def calculate_each_cost(each_cost_data):
-    return each_cost_data['Position'] * each_cost_data['Price']
-
-
-def calculate_each_profit(each_profit):
-    return each_profit['EachCost'] * (-1)
+    return each_cost_data['PositionSize'] * each_cost_data['Price']
 
 
 # 下載當日收盤價
@@ -75,7 +72,20 @@ def download_today_close(each_today_close):
 
 # 計笡庫存個別資產
 def calculate_each_capital(each_capital):
-    return float(each_capital['Position']) * float(each_capital['TodayClose'])
+    return float(each_capital['PositionSize']) * float(each_capital['TodayClose'])
+
+
+def calculate_each_profit_percent(each_profit_percent):
+    cost = each_profit_percent['EachCost_x'] - \
+        each_profit_percent['EachCost_y']
+    flat_price = each_profit_percent['EachCost_x']
+    profit = (flat_price - cost) / cost
+    profit = round(profit, 2)
+    return profit
+
+
+def calculate_each_profit_money(each_profit_money):
+    return each_profit_money['EachCost_y'] * (-1)
 
 
 # 檢查目前庫存的收盤價是否進入平台
@@ -101,8 +111,6 @@ df_trading_history = pd.read_excel(
 # 計算每次交易記錄當下支出成本
 df_trading_history['EachCost'] = df_trading_history.apply(
     calculate_each_cost, axis=1)
-df_trading_history['EachCalculateProfit'] = df_trading_history.apply(
-    calculate_each_profit, axis=1)
 if ToExcel:
     df_trading_history.to_excel('TEMP_TradingModel_TradingHistory.xlsx')
 
@@ -120,10 +128,23 @@ if ToExcel:
 # 計算/輸出目前總庫存表單
 stock_history_group = df_trading_history.groupby('Stock_Id')
 total_open_postion = stock_history_group.sum()
+total_open_postion.reset_index(inplace=True)
+# TEMP_TradingModel_TodayCloseHistory >>
+today_close_history = pd.merge(
+    today_close_position, total_open_postion, on='Stock_Id')
+today_close_history['ProfitPercent'] = today_close_history.apply(
+    calculate_each_profit_percent, axis=1)
+today_close_history['ProfitMoney'] = today_close_history.apply(
+    calculate_each_profit_money, axis=1)
+today_close_history = today_close_history[[
+    'Date', 'Stock_Id', 'ProfitPercent', 'ProfitMoney']]
+if ToExcel:
+    today_close_history.to_excel(
+        'TEMP_TradingModel_TodayCloseHistory.xlsx', sheet_name='今日平倉損益')
+# <<
+total_open_postion = total_open_postion[total_open_postion['PositionSize'] != 0]
 total_open_postion = total_open_postion.drop(
     axis=1, columns=['Price', 'EachCost'])  # drop column, axis=1
-total_open_postion.reset_index(inplace=True)
-total_open_postion = total_open_postion[total_open_postion['Position'] != 0]
 if ToExcel:
     total_open_postion.to_excel(
         'TradingModel_TotalOpenPosition.xlsx', sheet_name='庫存')
@@ -132,7 +153,7 @@ if ToExcel:
 if not DoNotRequest:
     # 記錄庫存今日收盤價
     open_position_today_close = total_open_postion.drop(
-        axis=1, columns=['Position'])
+        axis=1, columns=['PositionSize'])
     open_position_today_close["TodayClose"] = open_position_today_close.apply(
         download_today_close, axis=1)
     if ToExcel:
@@ -159,22 +180,44 @@ if total_capital['Date'].to_list()[-1].date() != today:
             'TradingModel_TotalCapital.xlsx', index=False)
 
 
+# 輸出個股歷史平倉損益
+# TradingModel_TotalEachProfitHistory.xlsx
+total_each_profit = pd.read_excel('TradingModel_TotalEachProfitHistory.xlsx')
+if total_each_profit['Date'].to_list()[-1].date() != today:
+    total_each_profit = total_each_profit.append(
+        today_close_history, ignore_index=True)
+if ToExcel:
+    total_each_profit.to_excel(
+        'TradingModel_TotalEachProfitHistory.xlsx', index=False)
+
+
+# 輸出歷史總平倉損益
+# TradingModel_TotalProfit.xlsx
+total_profit = pd.read_excel('TradingModel_TotalProfit.xlsx')
+if total_profit['Date'].to_list()[-1].date() != today:
+    total_profit = total_profit.append(
+        {'Date': today, 'TotalProfit': total_each_profit['ProfitMoney'].sum()}, ignore_index=True)
+    if ToExcel:
+        total_profit.to_excel('TradingModel_TotalProfit.xlsx', index=False)
+
+
 # 檢查目前庫存的收盤價是否進入平台
-# 'TEST_TradingModel_OpenPositionWatching.xlsx'
-open_position_watching = pd.read_excel(
-    'TEST_TradingModel_OpenPositionWatching.xlsx')
-open_position_check = pd.merge(
-    open_position_today_close, open_position_watching)
-open_position_check['Lost_Previous_N'] = open_position_check.apply(
-    check_each_open_opsition_lost_previous_n, axis=1)
-open_position_check['Lost_Previous_Platform'] = open_position_check.apply(
-    check_each_open_opsition_lost_previous_platform, axis=1)
-for n in range(len(open_position_check['Stock_Id'])):
-    if open_position_check['Lost_Previous_N'].to_list()[n] == True:
-        print('Warning !!!!',
-              open_position_check['Stock_Id'].to_list()[n], '失守前 N')
-    if open_position_check['Lost_Previous_Platform'].to_list()[n] == True:
-        print('Warning !!!!',
-              open_position_check['Stock_Id'].to_list()[n], '進入前整理平台')
-open_position_check.to_excel(
-    'TEMP_TradingModel_OpenPositionWatching.xlsx', index=False)
+# 'TradingModel_OpenPositionWatching.xlsx'
+if Check:
+    open_position_watching = pd.read_excel(
+        'TradingModel_OpenPositionWatching.xlsx')
+    open_position_check = pd.merge(
+        open_position_today_close, open_position_watching)
+    open_position_check['Lost_Previous_N'] = open_position_check.apply(
+        check_each_open_opsition_lost_previous_n, axis=1)
+    open_position_check['Lost_Previous_Platform'] = open_position_check.apply(
+        check_each_open_opsition_lost_previous_platform, axis=1)
+    for n in range(len(open_position_check['Stock_Id'])):
+        if open_position_check['Lost_Previous_N'].to_list()[n] == True:
+            print('Warning !!!!',
+                  open_position_check['Stock_Id'].to_list()[n], '失守前 N')
+        if open_position_check['Lost_Previous_Platform'].to_list()[n] == True:
+            print('Warning !!!!',
+                  open_position_check['Stock_Id'].to_list()[n], '進入前整理平台')
+    open_position_check.to_excel(
+        'TEMP_TradingModel_OpenPositionWatching.xlsx', index=False)
