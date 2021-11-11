@@ -123,6 +123,7 @@ total_open_postion = stock_history_group.sum()
 total_open_postion = total_open_postion.drop(
     axis=1, columns=['Price', 'EachCost'])  # drop column, axis=1
 total_open_postion.reset_index(inplace=True)
+total_open_postion = total_open_postion[total_open_postion['Position'] != 0]
 if ToExcel:
     total_open_postion.to_excel(
         'TEST_TradingModel_TotalOpenPosition.xlsx', sheet_name='庫存')
