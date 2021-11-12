@@ -11,7 +11,7 @@ from openpyxl import load_workbook
 ToExcel = True
 DoNotRequest = False
 FromGoodInfo = False
-Check = False
+Check = True
 
 headers = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0 Win64 x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36"}
@@ -143,6 +143,7 @@ if ToExcel:
         'TEMP_TradingModel_TodayCloseHistory.xlsx', sheet_name='今日平倉損益')
 # <<
 total_open_postion = total_open_postion[total_open_postion['PositionSize'] != 0]
+realtime_watching = total_open_postion
 total_open_postion = total_open_postion.drop(
     axis=1, columns=['Price', 'EachCost'])  # drop column, axis=1
 if ToExcel:
@@ -207,17 +208,6 @@ if Check:
     open_position_watching = pd.read_excel(
         'TradingModel_OpenPositionWatching.xlsx')
     open_position_check = pd.merge(
-        open_position_today_close, open_position_watching)
-    open_position_check['Lost_Previous_N'] = open_position_check.apply(
-        check_each_open_opsition_lost_previous_n, axis=1)
-    open_position_check['Lost_Previous_Platform'] = open_position_check.apply(
-        check_each_open_opsition_lost_previous_platform, axis=1)
-    for n in range(len(open_position_check['Stock_Id'])):
-        if open_position_check['Lost_Previous_N'].to_list()[n] == True:
-            print('Warning !!!!',
-                  open_position_check['Stock_Id'].to_list()[n], '失守前 N')
-        if open_position_check['Lost_Previous_Platform'].to_list()[n] == True:
-            print('Warning !!!!',
-                  open_position_check['Stock_Id'].to_list()[n], '進入前整理平台')
-    open_position_check.to_excel(
-        'TEMP_TradingModel_OpenPositionWatching.xlsx', index=False)
+        realtime_watching, open_position_watching, on='Stock_Id', how='inner')
+    # print(open_position_check)
+    open_position_check.to_excel('TradingModel_OpenPositionWatching.xlsx')
