@@ -1,9 +1,17 @@
 import pandas as pd
 
+# 4分以上 : 整理平台不明顯，直線上漲
+# 3分以上 : 有整理平台，階梯上漲
+# 2.5以上 : 突破整理平台
+# 2分以上 : 有整理平台，在整理區間內
+# 0分 : 不符合需求
+
+# 0.8以上 : 週K歷史新高位階
 
 sorted = True
-input_csv = 'goodinfo_StockList_21W45_Thu_2nd.csv'
-output_xlsx = 'goodinfo_StockList_21W45_Thu_sorted.xlsx'
+input_csv = 'GoodInfo_StockList_20211112.csv'
+output_xlsx = ''
+reference_xlsx = 'GoodInfo_StockList_20211112.xlsx'
 
 
 def stair_condition(stair_df):
@@ -42,22 +50,15 @@ if not sorted:
     goodinfo_stocklist = goodinfo_stocklist[goodinfo_stocklist['Condition'] == 'YES']
     goodinfo_stocklist.to_excel(output_xlsx)
 
+    reference_df = pd.read_excel(reference_xlsx)
+    #sorted_df = pd.read_excel(output_xlsx)
+    reference_df = reference_df[['代號', '名稱', 'Class']]
+    goodinfo_stocklist = goodinfo_stocklist[['名稱']]
+    merging_df = pd.merge(reference_df, goodinfo_stocklist,
+                          how='outer', on=['名稱'])
+    merging_df.to_excel(output_xlsx, index=False)
+    print(merging_df)
 else:
-    print('sorted')
-    #sorted_df = pd.read_excel(output_xlsx).rename(columns={'代號': 'Stock_Id'})
-    #class_df = pd.read_excel('goodinfo_StockList_21W45_Thu_sorted.xlsx')
-
-    ##sorted_df = sorted_df[['Stock_Id']]
-    ##class_df = class_df[['Stock_Id']]
-    #df = sorted_df.merge(class_df, on='Stock_Id')
-    # df = df[['Stock_Id', '名稱', '成交', '漲跌幅', '一個月最低股價', '三個月最低股價', '半年最低股價', '一年最低股價', '5日累計漲跌(%)', '一個月累計漲跌(%)', '三個月累計漲跌(%)', '半年累計漲跌(%)', '一年累計漲跌(%)', '21W45外資買賣超張數', '21W45外資買賣超佔成交(%)', '一個月最高股價', '三個月最高股價', '半年最高股價', '一年最高股價', 'Condition', 'Class'
-    #         ]]
-    #df = df.rename(columns={'Stock_Id': '代號'})
-    # df.to_excel('goodinfo_StockList_21W45_Thu_sorted.xlsx')
-
-    sorted_df = pd.read_excel(output_xlsx)
-    sorted_df = sorted_df[['代號', '名稱', 'Class']].sort_values(by='Class')
-    sorted_df = sorted_df[sorted_df['Class'] >= 2]
-    sorted_df.to_excel('temp_'+output_xlsx)
-
-# "=XQCTYAP|Quote!'1201.TW-Name,Price'"
+    print('merged')
+    merged_df = pd.read_excel(reference_xlsx)
+    print(merged_df.sort_values(by='Class'))
