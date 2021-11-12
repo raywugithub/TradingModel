@@ -9,7 +9,7 @@ import time
 from openpyxl import load_workbook
 
 ToExcel = True
-DoNotRequest = True
+DoNotRequest = False
 FromGoodInfo = False
 Check = False
 
