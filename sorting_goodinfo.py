@@ -1,90 +1,63 @@
 import pandas as pd
 
+
 sorted = True
+input_csv = 'goodinfo_StockList_21W45_Thu_2nd.csv'
+output_xlsx = 'goodinfo_StockList_21W45_Thu_sorted.xlsx'
+
+
+def stair_condition(stair_df):
+    if (stair_df['半年最低股價'] > stair_df['一年最低股價']):
+        if (stair_df['三個月最低股價'] > stair_df['半年最低股價']):
+            if(stair_df['一個月最低股價'] > stair_df['三個月最低股價']):
+                return 'YES'
+
 
 if not sorted:
-    goodinfo_stocklist = pd.read_csv('goodinfo_StockList_21WW45.csv')
+    goodinfo_stocklist = pd.read_csv(input_csv)
 
-    sorted_id = []
-    sorted_name = []
-    sorted_low_month = []
-    sorted_low_three_month = []
-    sorted_low_six_month = []
-    sorted_low_year = []
-    sorted_diff_five_day = []
-    sorted_diff_month = []
-    sorted_diff_three_month = []
-    sorted_diff_six_month = []
-    sorted_diff_year = []
-    sorted_big_buy = []
-    sorted_big_buy_percent = []
-
-    str_low_month = '一個月最低股價'
-    str_low_three_month = '三個月最低股價'
-    str_low_six_month = '半年最低股價'
-    str_low_year = '一年最低股價'
-    str_diff_five_day = '5日累計漲跌(%)'
-    str_diff_month = '一個月累計漲跌(%)'
-    str_diff_three_month = '三個月累計漲跌(%)'
-    str_diff_six_month = '半年累計漲跌(%)'
-    str_diff_year = '一年累計漲跌(%)'
-    str_big_buy = '21W45外資買賣超張數'
-    str_big_buy_percent = '21W45外資買賣超佔成交(%)'
-
-    list_low_month = goodinfo_stocklist[str_low_month].to_list()
-    list_low_three_month = goodinfo_stocklist[str_low_three_month].to_list()
-    list_low_six_month = goodinfo_stocklist[str_low_six_month].to_list()
-    list_low_year = goodinfo_stocklist[str_low_year].to_list()
-    list_diff_five_day = goodinfo_stocklist[str_diff_five_day].to_list()
-    list_diff_month = goodinfo_stocklist[str_diff_month].to_list()
-    list_diff_three_month = goodinfo_stocklist[str_diff_three_month].to_list()
-    list_diff_six_month = goodinfo_stocklist[str_diff_six_month].to_list()
-    list_diff_year = goodinfo_stocklist[str_diff_year].to_list()
-    list_big_buy = goodinfo_stocklist[str_big_buy].to_list()
-    list_big_buy_percent = goodinfo_stocklist[str_big_buy_percent].to_list()
-
+    # 代號
+    # 名稱
+    # 成交
+    # 漲跌幅
+    # 一個月最低股價
+    # 三個月最低股價
+    # 半年最低股價
+    # 一年最低股價
+    # 5日累計漲跌(%)
+    # 一個月累計漲跌(%)
+    # 三個月累計漲跌(%)
+    # 半年累計漲跌(%)
+    # 一年累計漲跌(%)
+    # 21W45外資買賣超張數
+    # 21W45外資買賣超佔成交(%)
+    # 一個月最高股價
+    # 三個月最高股價
+    # 半年最高股價
+    # 一年最高股價
+    sorted_df = pd.DataFrame()
     for n in range(len(goodinfo_stocklist['代號'])):
-        if (list_low_six_month[n] > list_low_year[n]) and (list_low_three_month[n] > list_low_six_month[n]) and (list_low_month[n] > list_low_three_month[n]):
-            sorted_id.append(goodinfo_stocklist['代號'].to_list()[n])
-            sorted_name.append(goodinfo_stocklist['名稱'].to_list()[n])
-            sorted_low_month.append(goodinfo_stocklist['一個月最低股價'].to_list()[n])
-            sorted_low_three_month.append(
-                goodinfo_stocklist['三個月最低股價'].to_list()[n])
-            sorted_low_six_month.append(
-                goodinfo_stocklist['半年最低股價'].to_list()[n])
-            sorted_low_year.append(goodinfo_stocklist['一年最低股價'].to_list()[n])
-            sorted_diff_five_day.append(
-                goodinfo_stocklist['5日累計漲跌(%)'].to_list()[n])
-            sorted_diff_month.append(
-                goodinfo_stocklist['一個月累計漲跌(%)'].to_list()[n])
-            sorted_diff_three_month.append(
-                goodinfo_stocklist['三個月累計漲跌(%)'].to_list()[n])
-            sorted_diff_six_month.append(
-                goodinfo_stocklist['半年累計漲跌(%)'].to_list()[n])
-            sorted_diff_year.append(
-                goodinfo_stocklist['一年累計漲跌(%)'].to_list()[n])
-            sorted_big_buy.append(
-                goodinfo_stocklist['21W45外資買賣超張數'].to_list()[n])
-            sorted_big_buy_percent.append(
-                goodinfo_stocklist['21W45外資買賣超佔成交(%)'].to_list()[n])
+        goodinfo_stocklist['Condition'] = goodinfo_stocklist.apply(
+            stair_condition, axis=1)
+    goodinfo_stocklist = goodinfo_stocklist[goodinfo_stocklist['Condition'] == 'YES']
+    goodinfo_stocklist.to_excel(output_xlsx)
 
-    df = pd.DataFrame({
-        "Stock_Id": sorted_id,
-        "Name": sorted_name,
-        'low_month': sorted_low_month,
-        'low_three_month': sorted_low_three_month,
-        'low_six_month': sorted_low_six_month,
-        'low_year': sorted_low_year,
-        'diff_five_day': sorted_diff_five_day,
-        'diff_month': sorted_diff_month,
-        'diff_three_month': sorted_diff_three_month,
-        'diff_six_month': sorted_diff_six_month,
-        'diff_year': sorted_diff_year,
-        'big_buy': sorted_big_buy,
-        'big_buy_percent': sorted_big_buy_percent
-    })
-
-    # df.to_excel('goodinfo_StockList_21WW45.xlsx')
 else:
     print('sorted')
-    sorted_df = pd.read_excel('goodinfo_StockList_21WW45_sorted.xlsx')
+    #sorted_df = pd.read_excel(output_xlsx).rename(columns={'代號': 'Stock_Id'})
+    #class_df = pd.read_excel('goodinfo_StockList_21W45_Thu_sorted.xlsx')
+
+    ##sorted_df = sorted_df[['Stock_Id']]
+    ##class_df = class_df[['Stock_Id']]
+    #df = sorted_df.merge(class_df, on='Stock_Id')
+    # df = df[['Stock_Id', '名稱', '成交', '漲跌幅', '一個月最低股價', '三個月最低股價', '半年最低股價', '一年最低股價', '5日累計漲跌(%)', '一個月累計漲跌(%)', '三個月累計漲跌(%)', '半年累計漲跌(%)', '一年累計漲跌(%)', '21W45外資買賣超張數', '21W45外資買賣超佔成交(%)', '一個月最高股價', '三個月最高股價', '半年最高股價', '一年最高股價', 'Condition', 'Class'
+    #         ]]
+    #df = df.rename(columns={'Stock_Id': '代號'})
+    # df.to_excel('goodinfo_StockList_21W45_Thu_sorted.xlsx')
+
+    sorted_df = pd.read_excel(output_xlsx)
+    sorted_df = sorted_df[['代號', '名稱', 'Class']].sort_values(by='Class')
+    sorted_df = sorted_df[sorted_df['Class'] >= 2]
+    sorted_df.to_excel('temp_'+output_xlsx)
+
+# "=XQCTYAP|Quote!'1201.TW-Name,Price'"
