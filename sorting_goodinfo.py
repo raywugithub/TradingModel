@@ -61,4 +61,9 @@ if not sorted:
 else:
     print('merged')
     merged_df = pd.read_excel(reference_xlsx)
-    print(merged_df.sort_values(by='Class'))
+    watching_list_two_df = merged_df[(
+        merged_df.Class < 3) & (merged_df.Class >= 2)]
+    watching_list_two_df.to_excel('TradingModel_2_Watching.xlsx')
+    watching_list_three_df = merged_df[(
+        merged_df.Class < 4) & (merged_df.Class >= 3)]
+    watching_list_three_df.to_excel('TradingModel_3_Watching.xlsx')
