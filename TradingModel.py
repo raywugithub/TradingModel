@@ -132,15 +132,18 @@ total_open_postion.reset_index(inplace=True)
 # TEMP_TradingModel_TodayCloseHistory >>
 today_close_history = pd.merge(
     today_close_position, total_open_postion, on='Stock_Id')
-today_close_history['ProfitPercent'] = today_close_history.apply(
-    calculate_each_profit_percent, axis=1)
-today_close_history['ProfitMoney'] = today_close_history.apply(
-    calculate_each_profit_money, axis=1)
-today_close_history = today_close_history[[
-    'Date', 'Stock_Id', 'ProfitPercent', 'ProfitMoney']]
-if ToExcel:
-    today_close_history.to_excel(
-        'TEMP_TradingModel_TodayCloseHistory.xlsx', sheet_name='今日平倉損益')
+try:
+    today_close_history['ProfitPercent'] = today_close_history.apply(
+        calculate_each_profit_percent, axis=1)
+    today_close_history['ProfitMoney'] = today_close_history.apply(
+        calculate_each_profit_money, axis=1)
+    today_close_history = today_close_history[[
+        'Date', 'Stock_Id', 'ProfitPercent', 'ProfitMoney']]
+    if ToExcel:
+        today_close_history.to_excel(
+            'TEMP_TradingModel_TodayCloseHistory.xlsx', sheet_name='今日平倉損益')
+except:
+    print('TodayCloseHistory : None')
 # <<
 total_open_postion = total_open_postion[total_open_postion['PositionSize'] != 0]
 realtime_watching = total_open_postion
@@ -210,4 +213,4 @@ if Check:
     open_position_check = pd.merge(
         realtime_watching, open_position_watching, on='Stock_Id', how='inner')
     # print(open_position_check)
-    open_position_check.to_excel('TradingModel_OpenPositionWatching.xlsx')
+    # open_position_check.to_excel('TradingModel_OpenPositionWatching.xlsx')
