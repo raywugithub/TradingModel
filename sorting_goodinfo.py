@@ -9,9 +9,8 @@ import pandas as pd
 # 0.8以上 : 週K歷史新高位階
 
 sorted = True
-input_csv = 'GoodInfo_StockList_20211112.csv'
-output_xlsx = ''
-reference_xlsx = 'GoodInfo_StockList_20211112.xlsx'
+input_csv = 'GoodInfo_StockList_20211115.csv'
+output_xlsx = 'GoodInfo_StockList_20211115_.xlsx'
 
 
 def stair_condition(stair_df):
@@ -53,9 +52,13 @@ if not sorted:
     reference_df = pd.read_excel(reference_xlsx)
     #sorted_df = pd.read_excel(output_xlsx)
     reference_df = reference_df[['代號', '名稱', 'Class']]
-    goodinfo_stocklist = goodinfo_stocklist[['名稱']]
-    merging_df = pd.merge(reference_df, goodinfo_stocklist,
+    merging_df = pd.merge(goodinfo_stocklist, reference_df,
                           how='outer', on=['名稱'])
+    merging_df['代號_x'] = merging_df['代號_y']
+    merging_df.rename(columns={'代號_x': '代號'}, inplace=True)
+    merging_df.sort_values(by='Class', inplace=True, ascending=False)
+    merging_df = merging_df[[
+        '代號', '名稱', '5日累計漲跌(%)', '三個月累計漲跌(%)', '半年累計漲跌(%)', '一年累計漲跌(%)', 'Class']]
     merging_df.to_excel(output_xlsx, index=False)
     print(merging_df)
 else:
