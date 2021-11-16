@@ -6,12 +6,12 @@ import datetime
 import requests
 from bs4 import BeautifulSoup
 import time
-from openpyxl import load_workbook
+
 
 ToExcel = True
 DoNotRequest = False
 FromGoodInfo = False
-Check = False
+
 
 headers = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0 Win64 x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36"}
@@ -87,20 +87,6 @@ def calculate_each_profit_percent(each_profit_percent):
 def calculate_each_profit_money(each_profit_money):
     return each_profit_money['EachCost_y'] * (-1)
 
-
-# 檢查目前庫存的收盤價是否進入平台
-def check_each_open_opsition_lost_previous_n(each_open_position):
-    if each_open_position['TodayClose'] < each_open_position['Previous_N_High']:
-        return True
-    else:
-        return False
-
-
-def check_each_open_opsition_lost_previous_platform(each_open_position):
-    if each_open_position['TodayClose'] < each_open_position['Previous_Platform_High']:
-        return True
-    else:
-        return False
 # ===================================================================================================
 
 
@@ -203,14 +189,3 @@ if total_profit['Date'].to_list()[-1].date() != today:
         {'Date': today, 'TotalProfit': total_each_profit['ProfitMoney'].sum()}, ignore_index=True)
     if ToExcel:
         total_profit.to_excel('TradingModel_TotalProfit.xlsx', index=False)
-
-
-# 檢查目前庫存的收盤價是否進入平台
-# 'TradingModel_OpenPositionWatching.xlsx'
-if Check:
-    open_position_watching = pd.read_excel(
-        'TradingModel_OpenPositionWatching.xlsx')
-    open_position_check = pd.merge(
-        realtime_watching, open_position_watching, on='Stock_Id', how='inner')
-    # print(open_position_check)
-    # open_position_check.to_excel('TradingModel_OpenPositionWatching.xlsx')
