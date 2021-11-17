@@ -137,7 +137,7 @@ total_open_postion = total_open_postion.drop(
     axis=1, columns=['Price', 'EachCost'])  # drop column, axis=1
 if ToExcel:
     total_open_postion.to_excel(
-        'TradingModel_TotalOpenPosition.xlsx', sheet_name='庫存')
+        'TEMP_TradingModel_TotalOpenPosition.xlsx', sheet_name='庫存')
 
 
 if not DoNotRequest:
@@ -148,10 +148,10 @@ if not DoNotRequest:
         download_today_close, axis=1)
     if ToExcel:
         open_position_today_close.to_excel(
-            'TradingModel_OpenPositionTodayClose.xlsx', sheet_name='收盤價')
+            'TEMP_TradingModel_OpenPositionTodayClose.xlsx', sheet_name='收盤價')
 else:
     open_position_today_close = pd.read_excel(
-        'TradingModel_OpenPositionTodayClose.xlsx')
+        'TEMP_TradingModel_OpenPositionTodayClose.xlsx')
 
 
 # 輸出每日總資產
