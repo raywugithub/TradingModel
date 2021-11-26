@@ -76,8 +76,10 @@ def calculate_each_capital(each_capital):
 
 
 def calculate_each_profit_percent(each_profit_percent):
-    cost = each_profit_percent['EachCost_x'] - \
-        each_profit_percent['EachCost_y']
+    # cost = each_profit_percent['EachCost_x'] - \
+    #    each_profit_percent['EachCost_y']
+    cost = (each_profit_percent['Price_y'] -
+            each_profit_percent['Price_x']) * each_profit_percent['PositionSize_x']
     flat_price = each_profit_percent['EachCost_x']
     profit = (flat_price - cost) / cost
     profit = round(profit, 2)
@@ -85,8 +87,11 @@ def calculate_each_profit_percent(each_profit_percent):
 
 
 def calculate_each_profit_money(each_profit_money):
-    return each_profit_money['EachCost_y'] * (-1)
-
+    # return each_profit_money['EachCost_y'] * (-1)
+    cost = (each_profit_money['Price_y'] -
+            each_profit_money['Price_x']) * each_profit_money['PositionSize_x']
+    flat_price = each_profit_money['EachCost_x']
+    return (flat_price - cost) * (-1)
 # ===================================================================================================
 
 
